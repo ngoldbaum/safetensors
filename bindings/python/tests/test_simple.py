@@ -175,7 +175,7 @@ class ErrorsTestCase(unittest.TestCase):
         with self.assertRaises(FileNotFoundError) as ctx:
             with safe_open("notafile", framework="pt"):
                 pass
-        self.assertEqual(str(ctx.exception), 'No such file or directory: notafile')
+        self.assertEqual(str(ctx.exception), "No such file or directory: notafile")
 
 
 class ReadmeTestCase(unittest.TestCase):
