@@ -1,6 +1,5 @@
 import paddle
-import numpy as np
-from collections import Iterable, OrderedDict
+from collections import OrderedDict
     
 def _parse_every_object(obj, condition_func, convert_func):
     if condition_func(obj):
