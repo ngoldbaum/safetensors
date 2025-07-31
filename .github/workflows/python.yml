@@ -8,6 +8,7 @@ jobs:
     name: Check everything builds & tests
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: False
       matrix:
         os: [ubuntu-latest, macos-13, windows-latest]
         # Lowest and highest, no version specified so that 
