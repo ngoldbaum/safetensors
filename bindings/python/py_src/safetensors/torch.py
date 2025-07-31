@@ -41,9 +41,7 @@ def storage_size(tensor: torch.Tensor) -> int:
             return tensor.nelement() * _SIZE[tensor.dtype]
 
 
-def _filter_shared_not_shared(
-    tensors: List[Set[str]], state_dict: Dict[str, torch.Tensor]
-) -> List[Set[str]]:
+def _filter_shared_not_shared(tensors: List[Set[str]], state_dict: Dict[str, torch.Tensor]) -> List[Set[str]]:
     filtered_tensors = []
     for shared in tensors:
         if len(shared) < 2:
@@ -71,11 +69,7 @@ def _filter_shared_not_shared(
 def _find_shared_tensors(state_dict: Dict[str, torch.Tensor]) -> List[Set[str]]:
     tensors = defaultdict(set)
     for k, v in state_dict.items():
-        if (
-            v.device != torch.device("meta")
-            and storage_ptr(v) != 0
-            and storage_size(v) != 0
-        ):
+        if v.device != torch.device("meta") and storage_ptr(v) != 0 and storage_size(v) != 0:
             # Need to add device as key because of multiple GPU.
             tensors[(v.device, storage_ptr(v), storage_size(v))].add(k)
     tensors = list(sorted(tensors.values()))
@@ -84,9 +78,7 @@ def _find_shared_tensors(state_dict: Dict[str, torch.Tensor]) -> List[Set[str]]:
 
 
 def _is_complete(tensor: torch.Tensor) -> bool:
-    return tensor.data_ptr() == storage_ptr(tensor) and tensor.nelement() * _SIZE[
-        tensor.dtype
-    ] == storage_size(tensor)
+    return tensor.data_ptr() == storage_ptr(tensor) and tensor.nelement() * _SIZE[tensor.dtype] == storage_size(tensor)
 
 
 def _remove_duplicate_names(
@@ -105,9 +97,7 @@ def _remove_duplicate_names(
     shareds = _find_shared_tensors(state_dict)
     to_remove = defaultdict(list)
     for shared in shareds:
-        complete_names = set(
-            [name for name in shared if _is_complete(state_dict[name])]
-        )
+        complete_names = set([name for name in shared if _is_complete(state_dict[name])])
         if not complete_names:
             raise RuntimeError(
                 "Error while trying to find names to remove to save state dict, but found no suitable name to keep"
@@ -217,9 +207,7 @@ def load_model(
     """
     state_dict = load_file(filename, device=device)
     model_state_dict = model.state_dict()
-    to_removes = _remove_duplicate_names(
-        model_state_dict, preferred_names=state_dict.keys()
-    )
+    to_removes = _remove_duplicate_names(model_state_dict, preferred_names=state_dict.keys())
 
     reverse_to_remove = {}
     for key, to_remove_group in to_removes.items():
@@ -285,9 +273,7 @@ def load_model(
     return missing, unexpected
 
 
-def save(
-    tensors: Dict[str, torch.Tensor], metadata: Optional[Dict[str, str]] = None
-) -> bytes:
+def save(tensors: Dict[str, torch.Tensor], metadata: Optional[Dict[str, str]] = None) -> bytes:
     """
     Saves a dictionary of tensors into raw bytes in safetensors format.
 
@@ -351,9 +337,7 @@ def save_file(
     serialize_file(_flatten(tensors), filename, metadata=metadata)
 
 
-def load_file(
-    filename: Union[str, os.PathLike], device: Union[str, int] = "cpu"
-) -> Dict[str, torch.Tensor]:
+def load_file(filename: Union[str, os.PathLike], device: Union[str, int] = "cpu") -> Dict[str, torch.Tensor]:
     """
     Loads a safetensors file into torch format.
 
@@ -536,16 +520,12 @@ def _tobytes(tensor: torch.Tensor, name: str) -> bytes:
 
 def _flatten(tensors: Dict[str, torch.Tensor]) -> Dict[str, Dict[str, Any]]:
     if not isinstance(tensors, dict):
-        raise ValueError(
-            f"Expected a dict of [str, torch.Tensor] but received {type(tensors)}"
-        )
+        raise ValueError(f"Expected a dict of [str, torch.Tensor] but received {type(tensors)}")
 
     invalid_tensors = []
     for k, v in tensors.items():
         if not isinstance(v, torch.Tensor):
-            raise ValueError(
-                f"Key `{k}` is invalid, expected torch.Tensor but received {type(v)}"
-            )
+            raise ValueError(f"Key `{k}` is invalid, expected torch.Tensor but received {type(v)}")
 
         if v.layout != torch.strided:
             invalid_tensors.append(k)
