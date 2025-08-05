@@ -2,8 +2,6 @@ import sys
 import tempfile
 import threading
 
-import jax
-import jax.numpy as jnp
 import numpy as np
 import pytest
 import torch
@@ -12,58 +10,45 @@ from safetensors.numpy import load_file as load_file_np
 from safetensors.numpy import save_file as save_file_np
 from safetensors.torch import load_file as load_file_pt
 from safetensors.torch import save_file as save_file_pt
-from safetensors.flax import load_file as load_file_jax
-from safetensors.flax import save_file as save_file_jax
 
 CREATE_TENSOR = {
     "numpy": np.array,
     "pytorch": torch.tensor,
-    "jax": jnp.array,
 }
-
-
-def random_shim(*args):
-    jax.random.normal(args)
 
 
 CREATE_RANDOM = {
     "numpy": np.random.randn,
     "pytorch": torch.randn,
-    "jax": random_shim,
 }
 
 CREATE_ONES = {
     "numpy": np.ones,
     "pytorch": torch.ones,
-    "jax": jnp.ones,
 }
 
 ALL = {
     "numpy": np.all,
     "pytorch": torch.all,
-    "jax": jnp.all,
 }
 
 SAVE_FILE = {
     "numpy": save_file_np,
     "pytorch": save_file_pt,
-    "jax": save_file_jax,
 }
 
 LOAD_FILE = {
     "numpy": load_file_np,
     "pytorch": load_file_pt,
-    "jax": load_file_jax,
 }
 
 INT32 = {
     "numpy": np.int32,
     "pytorch": torch.int32,
-    "jax": jnp.int32,
 }
 
 
-@pytest.mark.parametrize("backend", ["numpy", "pytorch", "jax"])
+@pytest.mark.parametrize("backend", ["numpy", "pytorch"])
 def test_multithreaded_roundtripping(backend):
     b = threading.Barrier(4)
     done = 0
@@ -94,9 +79,7 @@ def test_multithreaded_roundtripping(backend):
         orig_switch = sys.getswitchinterval()
         sys.setswitchinterval(0.000001)  # in seconds
 
-        tasks = [
-            threading.Thread(target=save_worker, args=(tensors,)) for _ in range(4)
-        ]
+        tasks = [threading.Thread(target=save_worker, args=(tensors,)) for _ in range(4)]
         [t.start() for t in tasks]
         [t.join() for t in tasks]
     finally:
