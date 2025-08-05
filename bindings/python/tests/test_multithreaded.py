@@ -79,7 +79,9 @@ def test_multithreaded_roundtripping(backend):
         orig_switch = sys.getswitchinterval()
         sys.setswitchinterval(0.000001)  # in seconds
 
-        tasks = [threading.Thread(target=save_worker, args=(tensors,)) for _ in range(4)]
+        tasks = [
+            threading.Thread(target=save_worker, args=(tensors,)) for _ in range(4)
+        ]
         [t.start() for t in tasks]
         [t.join() for t in tasks]
     finally:
