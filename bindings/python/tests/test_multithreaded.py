@@ -16,53 +16,54 @@ from safetensors.flax import load_file as load_file_jax
 from safetensors.flax import save_file as save_file_jax
 
 CREATE_TENSOR = {
-    'numpy': np.array,
-    'pytorch': torch.tensor,
-    'jax': jnp.array,
+    "numpy": np.array,
+    "pytorch": torch.tensor,
+    "jax": jnp.array,
 }
 
 
 def random_shim(*args):
     jax.random.normal(args)
 
+
 CREATE_RANDOM = {
-    'numpy': np.random.randn,
-    'pytorch': torch.randn,
-    'jax': random_shim,
+    "numpy": np.random.randn,
+    "pytorch": torch.randn,
+    "jax": random_shim,
 }
 
 CREATE_ONES = {
-    'numpy': np.ones,
-    'pytorch': torch.ones,
-    'jax': jnp.ones,
+    "numpy": np.ones,
+    "pytorch": torch.ones,
+    "jax": jnp.ones,
 }
 
 ALL = {
-    'numpy': np.all,
-    'pytorch': torch.all,
-    'jax': jnp.all,
+    "numpy": np.all,
+    "pytorch": torch.all,
+    "jax": jnp.all,
 }
 
 SAVE_FILE = {
-    'numpy': save_file_np,
-    'pytorch': save_file_pt,
-    'jax': save_file_jax,
+    "numpy": save_file_np,
+    "pytorch": save_file_pt,
+    "jax": save_file_jax,
 }
 
 LOAD_FILE = {
-    'numpy': load_file_np,
-    'pytorch': load_file_pt,
-    'jax': load_file_jax,
+    "numpy": load_file_np,
+    "pytorch": load_file_pt,
+    "jax": load_file_jax,
 }
 
 INT32 = {
-    'numpy': np.int32,
-    'pytorch': torch.int32,
-    'jax': jnp.int32,
+    "numpy": np.int32,
+    "pytorch": torch.int32,
+    "jax": jnp.int32,
 }
 
 
-@pytest.mark.parametrize('backend', ['numpy', 'pytorch', 'jax'])
+@pytest.mark.parametrize("backend", ["numpy", "pytorch", "jax"])
 def test_multithreaded_roundtripping(backend):
     b = threading.Barrier(4)
     done = 0
@@ -81,19 +82,21 @@ def test_multithreaded_roundtripping(backend):
             done += 1
 
     tensors = {
-        '1': CREATE_RANDOM[backend](5, 25),
-        '2': CREATE_RANDOM[backend](876, 768, 2),
-        '3': CREATE_ONES[backend](5000),
-        '4': CREATE_TENSOR[backend](5000.),
-        '5': CREATE_TENSOR[backend](768, dtype=INT32[backend]),
+        "1": CREATE_RANDOM[backend](5, 25),
+        "2": CREATE_RANDOM[backend](876, 768, 2),
+        "3": CREATE_ONES[backend](5000),
+        "4": CREATE_TENSOR[backend](5000.0),
+        "5": CREATE_TENSOR[backend](768, dtype=INT32[backend]),
     }
 
     try:
         # the default thread switch interval is 5 milliseconds
         orig_switch = sys.getswitchinterval()
-        sys.setswitchinterval(.000001)  # in seconds
+        sys.setswitchinterval(0.000001)  # in seconds
 
-        tasks = [threading.Thread(target=save_worker, args=(tensors,)) for _ in range(4)]
+        tasks = [
+            threading.Thread(target=save_worker, args=(tensors,)) for _ in range(4)
+        ]
         [t.start() for t in tasks]
         [t.join() for t in tasks]
     finally:
